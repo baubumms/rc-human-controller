@@ -109,31 +109,43 @@ const Home: NextPage = () => {
   )
 
   const drive = (direction: DIRECTION) => {
-    const payload: Record<string, number | boolean> = { w: true, e: 5000 }
+    const payload: Record<string, number | boolean> = {
+      w: true,
+      e: 5000,
+    }
     switch (direction) {
       case DIRECTION.Forward:
         payload['s'] = 500
         payload['d'] = 0
+        payload['t'] = 400
         break
 
       case DIRECTION.Backward:
-        payload['s'] = 500
+        payload['s'] = -500
         payload['d'] = 0
+        payload['t'] = 400
+
         break
 
       case DIRECTION.Left:
-        payload['s'] = 500
+        payload['s'] = 50
         payload['d'] = -1000
+        payload['t'] = 100
+
         break
 
       case DIRECTION.Right:
-        payload['s'] = 500
+        payload['s'] = 50
         payload['d'] = 1000
+        payload['t'] = 100
+
         break
     }
 
     send(payload)
   }
+
+  const fire = () => send({ f: true, e: 1300, l: -1 })
 
   useEffect(() => {
     if (window !== undefined) {
@@ -150,24 +162,67 @@ const Home: NextPage = () => {
     }
   }, [])
 
+  useEffect(() => {
+    let keyDown = false
+
+    const keydown = (e: KeyboardEvent) => {
+      if (keyDown) {
+        return
+      }
+
+      console.log('down')
+      keyDown = true
+
+      switch (e.key) {
+        case 'w':
+          drive(DIRECTION.Forward)
+          break
+        case 's':
+          drive(DIRECTION.Backward)
+          break
+        case 'a':
+          drive(DIRECTION.Left)
+          break
+        case 'd':
+          drive(DIRECTION.Right)
+          break
+        case 'f':
+          fire()
+          break
+        case 't':
+          moveHead(20)
+          break
+        case 'g':
+          moveHead(-20)
+      }
+    }
+    const keyup = (e: KeyboardEvent) => {
+      console.log('up')
+      keyDown = false
+    }
+    document.addEventListener('keydown', keydown)
+    document.addEventListener('keyup', keyup)
+    return () => {
+      document.removeEventListener('keydown', keydown)
+      document.removeEventListener('keyup', keyup)
+    }
+  }, [socket])
+
   return (
     <div className="flex h-screen flex-col items-center justify-center bg-gray-900 text-white">
       <h1>RC Human Controller</h1>
 
       <div className="grid h-36 w-36 grid-cols-3 grid-rows-3">
-        <Button onClick={() => moveHead(10)}>
+        <Button onClick={() => moveHead(20)}>
           <ArrowUpIcon />
         </Button>
         <Button
           className="col-start-1 row-start-3"
-          onClick={() => moveHead(-10)}
+          onClick={() => moveHead(-20)}
         >
           <ArrowDownIcon />
         </Button>
-        <Button
-          className="col-start-2 row-start-2"
-          onClick={() => send({ f: true, e: 1500 })}
-        >
+        <Button className="col-start-2 row-start-2" onClick={fire}>
           <FireIcon />
         </Button>
 
